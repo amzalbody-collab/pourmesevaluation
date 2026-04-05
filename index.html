@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATHS Excellence - M. DEME</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- KaTeX pour le rendu scientifique -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="window.renderMath = renderMathInElement;"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #0f172a;
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .hero-mesh {
+            background-color: #0f172a;
+            background-image: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.3) 0, transparent 50%), 
+                              radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.2) 0, transparent 50%);
+        }
+        .btn-primary {
+            background: var(--primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+        }
+        .question-card {
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .option-label {
+            transition: all 0.2s ease;
+        }
+        .option-label:hover {
+            border-color: var(--primary);
+            background-color: #f5f3ff;
+        }
+        .option-input:checked + .option-content {
+            border-color: var(--primary);
+            background-color: #f5f3ff;
+            color: var(--primary);
+        }
+        .loader-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <!-- OVERLAY CHARGEMENT -->
+    <div id="global-loader" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-md">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center">
+            <svg class="loader-spin h-10 w-10 text-indigo-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p id="loader-text" class="font-bold text-slate-700 uppercase tracking-widest text-xs">Traitement...</p>
+        </div>
+    </div>
+
+    <!-- BOUTON ADMIN FLOTTANT -->
+    <button id="admin-dot" class="hidden fixed bottom-6 right-6 z-50 group" onclick="toggleAdmin()">
+        <div class="bg-slate-900 text-white p-4 rounded-full shadow-2xl group-hover:scale-110 transition-transform flex items-center gap-2">
+            <span class="font-bold text-xs uppercase tracking-tighter">Panel Prof</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+        </div>
+    </button>
+
+    <!-- SECTION ACCUEIL -->
+    <div id="view-home" class="animate-fade-in">
+        <section class="hero-mesh text-white pt-32 pb-20 px-6 overflow-hidden relative">
+            <div class="max-w-6xl mx-auto text-center relative z-10">
+                <div class="inline-block px-4 py-1.5 bg-indigo-500/20 border border-indigo-400/30 rounded-full text-indigo-300 text-xs font-bold uppercase tracking-widest mb-6">
+                    Plateforme Officielle - M. DEME
+                </div>
+                <h1 class="text-6xl md:text-8xl font-extrabold mb-8 tracking-tighter">Maths <span class="text-indigo-400 italic">Excellence</span></h1>
+                <p class="text-xl md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+                    Maîtrisez les Maths avec une plateforme conçue pour votre réussite. Évaluations précises et feedbacks immédiats.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-6">
+                    <button onclick="switchView('view-register')" class="btn-primary text-white font-bold py-5 px-10 rounded-2xl shadow-xl flex items-center justify-center gap-3">
+                        Rejoindre la classe
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7l5 5m0 0l-5 5m5-5H6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    </button>
+                    <button onclick="switchView('view-login')" class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold py-5 px-10 rounded-2xl border border-white/20 transition-all">
+                        Connexion Élève
+                    </button>
+                </div>
+            </div>
+            <!-- Décorations -->
+            <div class="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-600/20 blur-[120px] rounded-full"></div>
+            <div class="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-80 h-80 bg-emerald-600/10 blur-[100px] rounded-full"></div>
+        </section>
+        
+        <div class="max-w-4xl mx-auto -mt-12 px-6">
+            <div class="glass rounded-[3rem] p-10 shadow-2xl border border-white flex flex-col md:flex-row items-center gap-10">
+                <div class="relative">
+                    <div class="w-40 h-40 rounded-[2.5rem] bg-indigo-100 overflow-hidden shadow-inner border-4 border-white transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200" alt="Professeur" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all">
+                    </div>
+                    <div class="absolute -bottom-2 -right-2 bg-indigo-600 text-white p-2 rounded-xl shadow-lg">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.394 2.827a1 1 0 00-.788 0l-7 3a1 1 0 000 1.848l7 3a1 1 0 00.788 0l7-3a1 1 0 000-1.848l-7-3zM14 10a1 1 0 011 1v1a1 1 0 01-1 1H6a1 1 0 01-1-1v-1a1 1 0 011-1h8z"></path></svg>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-indigo-600 uppercase tracking-widest mb-1">Votre Professeur</h3>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4">M. DEME</h2>
+                    <p class="text-slate-600 leading-relaxed italic">"L'excellence n'est pas un acte, c'est une habitude. Ici, nous cultivons la rigueur scientifique chaque jour."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION INSCRIPTION -->
+    <div id="view-register" class="hidden animate-fade-in max-w-xl mx-auto p-6 mt-12">
+        <div class="glass rounded-[2.5rem] p-10 shadow-2xl">
+            <h2 class="text-4xl font-black text-slate-900 mb-2">Inscription</h2>
+            <p class="text-slate-500 mb-8 font-medium">Rejoignez votre classe pour accéder aux évaluations.</p>
+            <form class="space-y-5" onsubmit="handleRegister(event)">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-400 ml-2">Prénom</label>
+                        <input type="text" id="reg-prenom" required class="w-full p-4 bg-white/50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all" placeholder="Jean">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-400 ml-2">Nom</label>
+                        <input type="text" id="reg-nom" required class="w-full p-4 bg-white/50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all" placeholder="Dupont">
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-400 ml-2">Votre Classe</label>
+                    <select id="reg-classe" required class="w-full p-4 bg-white/50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-100 appearance-none"></select>
+                </div>
+                <button type="submit" class="w-full btn-primary text-white font-bold py-5 rounded-2xl shadow-xl mt-4">Confirmer l'inscription</button>
+            </form>
+            <button onclick="switchView('view-home')" class="w-full mt-6 text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors">Annuler et retourner à l'accueil</button>
+        </div>
+    </div>
+
+    <!-- SECTION CONNEXION -->
+    <div id="view-login" class="hidden animate-fade-in max-w-lg mx-auto p-6 mt-20">
+        <div class="glass rounded-[2.5rem] p-10 shadow-2xl text-center">
+            <div class="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <h1 class="text-4xl font-black text-slate-900 mb-4">Code d'accès</h1>
+            <p class="text-slate-500 mb-8">Veuillez entrer le code unique fourni lors de votre inscription.</p>
+            <input type="password" id="input-code" maxlength="10" class="w-full p-6 border-2 border-slate-100 bg-white/50 rounded-[2rem] text-center text-4xl font-black tracking-[0.4em] uppercase mb-6 focus:border-indigo-500 outline-none transition-all" placeholder="••••">
+            <button onclick="login()" class="w-full btn-primary text-white font-bold py-5 rounded-2xl shadow-xl">Vérifier l'identité</button>
+            <button onclick="switchView('view-home')" class="w-full mt-6 text-slate-400 font-bold text-sm">Retour</button>
+        </div>
+    </div>
+
+    <!-- TABLEAU DE BORD (DASHBOARD) -->
+    <div id="view-dash" class="hidden animate-fade-in max-w-4xl mx-auto p-6 space-y-8 mt-12">
+        <div class="glass rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between border border-white shadow-xl gap-6">
+            <div class="flex items-center gap-6">
+                <div class="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-emerald-500 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg">
+                    <span id="initial-letter">?</span>
+                </div>
+                <div>
+                    <h2 id="student-name" class="text-3xl font-black text-slate-800 tracking-tight">...</h2>
+                    <span id="class-info" class="inline-block mt-1 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-bold text-xs uppercase tracking-widest"></span>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button id="admin-btn-dash" onclick="switchView('view-admin')" class="hidden px-5 py-3 bg-slate-900 text-white rounded-2xl font-bold text-xs uppercase tracking-wider">Administration</button>
+                <button onclick="logout()" class="px-5 py-3 bg-red-50 text-red-500 border border-red-100 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-red-100 transition-colors">Déconnexion</button>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="flex items-center justify-between px-2">
+                <h3 class="font-extrabold text-slate-400 text-sm uppercase tracking-[0.2em]">Mes Évaluations</h3>
+                <span class="w-10 h-10 rounded-full bg-slate-200/50 flex items-center justify-center text-slate-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-width="2"></path></svg>
+                </span>
+            </div>
+            <div id="list-devoirs" class="grid gap-6 md:grid-cols-1"></div>
+        </div>
+    </div>
+
+    <!-- VUE EXAMEN -->
+    <div id="view-exam" class="hidden animate-fade-in max-w-3xl mx-auto p-6 space-y-8 mt-4">
+        <div class="sticky top-6 z-40 glass rounded-3xl shadow-2xl p-6 border-t-8 border-indigo-600">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <div id="timer-box" class="w-20 h-20 bg-red-50 text-red-600 rounded-2xl flex flex-col items-center justify-center font-black border border-red-100 shadow-inner">
+                        <span id="timer-val" class="text-2xl leading-none">00:00</span>
+                        <span class="text-[8px] uppercase opacity-50 mt-1">Temps</span>
+                    </div>
+                    <div>
+                        <h4 id="exam-title" class="text-xl font-extrabold text-slate-900 leading-tight italic">...</h4>
+                        <div class="flex gap-2 mt-2">
+                            <span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold uppercase tracking-widest">Maths - EXCELLENCE</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full md:w-48">
+                    <div class="flex justify-between text-[10px] font-bold uppercase text-slate-400 mb-1">
+                        <span>Progression</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden shadow-inner">
+                        <div id="time-progress" class="progress-bar bg-indigo-600 h-full w-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="questions-area" class="space-y-12 pb-32"></div>
+
+        <div class="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6">
+            <button id="btn-finish" onclick="handleSubmission()" class="w-full bg-slate-900 text-white font-black py-6 rounded-3xl shadow-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-4 group">
+                <span class="text-lg">DÉPOSER MA COPIE MAINTENANT</span>
+                <svg class="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- VUE RÉSULTATS -->
+    <div id="view-result" class="hidden animate-fade-in max-w-3xl mx-auto p-6 text-center mt-12">
+        <div class="glass rounded-[3.5rem] p-12 border-4 border-white shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-emerald-500 to-indigo-500"></div>
+            <h2 class="text-4xl font-black text-slate-900 mb-2">Évaluation Terminée</h2>
+            <p class="text-slate-400 font-bold uppercase tracking-widest text-xs mb-10">Félicitations pour votre effort</p>
+            
+            <div class="inline-flex items-center justify-center w-48 h-48 rounded-full bg-indigo-50 border-8 border-white shadow-2xl mb-10">
+                <div>
+                    <div id="final-score" class="text-6xl font-black text-indigo-600 italic">--/20</div>
+                    <div class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mt-1">Note Finale</div>
+                </div>
+            </div>
+            
+            <button onclick="location.reload()" class="w-full bg-slate-900 text-white py-5 rounded-[2rem] font-bold text-lg shadow-xl hover:bg-slate-800 transition-all">Retour au Tableau de Bord</button>
+        </div>
+        
+        <div class="mt-16 text-left">
+            <h3 class="font-black text-slate-400 uppercase text-xs tracking-widest ml-4 mb-6 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Correction Détaillée & Feedback
+            </h3>
+            <div id="feedback-area" class="space-y-6"></div>
+        </div>
+    </div>
+
+    <!-- VUE ADMINISTRATION -->
+    <div id="view-admin" class="hidden animate-fade-in max-w-6xl mx-auto p-6 space-y-8 mt-12">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div>
+                <h1 class="text-5xl font-black text-slate-900 tracking-tight">Espace Professeur</h1>
+                <p class="text-slate-400 font-medium">Gestion des évaluations et suivi des performances.</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="loadAdminData()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-200">Actualiser</button>
+                <button onclick="switchView('view-dash')" class="bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-2xl font-bold">Retour</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="glass p-8 rounded-[2.5rem] border-b-8 border-indigo-600 shadow-xl">
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Note Moyenne</p>
+                <h4 id="admin-avg" class="text-5xl font-black text-indigo-600">--</h4>
+            </div>
+            <div class="glass p-8 rounded-[2.5rem] border-b-8 border-emerald-500 shadow-xl">
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Élèves inscrits</p>
+                <h4 id="admin-stat-eleves" class="text-5xl font-black text-slate-900">0</h4>
+            </div>
+            <div class="glass p-8 rounded-[2.5rem] border-b-8 border-orange-400 shadow-xl">
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Copies rendues</p>
+                <h4 id="admin-stat-tentatives" class="text-5xl font-black text-slate-900">0</h4>
+            </div>
+        </div>
+
+        <div class="glass rounded-[3rem] overflow-hidden shadow-2xl border border-white">
+            <div class="p-8 bg-slate-900 text-white flex items-center justify-between">
+                <h3 class="text-xl font-bold">Historique des évaluations</h3>
+                <div class="flex gap-2 text-xs">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-emerald-500 rounded-full"></span> Terminé</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-orange-500 rounded-full"></span> En cours</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 text-[10px] font-bold uppercase text-slate-400 border-b">
+                        <tr>
+                            <th class="p-6">Identité de l'élève</th>
+                            <th class="p-6">Évaluation</th>
+                            <th class="p-6">Résultat</th>
+                            <th class="p-6">Horodatage</th>
+                            <th class="p-6 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-results" class="divide-y divide-slate-50"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG SUPABASE
+        const SUPABASE_URL = "https://tetrjsqrraambnfessgo.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_cKb8bk48BWZhPkY4W4xpJA_2cdAohyv";
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // STATE
+        let user = null;
+        let isAdmin = false;
+        let quiz = null;
+        let timerObj = null;
+        let currentAttemptId = null;
+
+        // UI HELPERS
+        function switchView(id) {
+            document.querySelectorAll('[id^="view-"]').forEach(v => {
+                v.classList.add('hidden');
+                v.classList.remove('block');
+            });
+            const target = document.getElementById(id);
+            target.classList.remove('hidden');
+            target.classList.add('block');
+            window.scrollTo(0, 0);
+            if(id === 'view-admin') loadAdminData();
+        }
+
+        function showLoading(show, text = "") {
+            const loader = document.getElementById('global-loader');
+            const txt = document.getElementById('loader-text');
+            txt.innerText = text || "Traitement...";
+            loader.classList.toggle('hidden', !show);
+        }
+
+        function toggleAdmin() {
+            if(!isAdmin) return;
+            const current = document.querySelector('[id^="view-"]:not(.hidden)').id;
+            switchView(current === 'view-admin' ? 'view-dash' : 'view-admin');
+        }
+
+        // INIT DATA
+        async function loadClasses() {
+            try {
+                const { data } = await sb.from('classes').select('*').order('nom_classe');
+                const select = document.getElementById('reg-classe');
+                if(data && select) {
+                    select.innerHTML = '<option value="" disabled selected>Choisir une classe</option>' + 
+                                     data.map(c => `<option value="${c.id_classe}">${c.nom_classe}</option>`).join('');
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // AUTH & REGISTRATION
+        async function handleRegister(e) {
+            e.preventDefault();
+            const prenom = document.getElementById('reg-prenom').value.trim();
+            const nom = document.getElementById('reg-nom').value.trim();
+            const idClasse = document.getElementById('reg-classe').value;
+            
+            showLoading(true, "Génération de votre code...");
+            try {
+                const code = (prenom.slice(0,2) + nom.slice(0,2) + Math.floor(1000 + Math.random()*8999)).toUpperCase();
+                const { error } = await sb.from('eleves').insert([{ prenom, nom, id_classe: idClasse, code_acces: code }]);
+                if(error) throw error;
+                
+                alert(`IMPORTANT\nVotre code d'accès est : ${code}\nNotez-le pour vous connecter.`);
+                switchView('view-login');
+                document.getElementById('input-code').value = code;
+            } catch(e) { alert("Erreur d'inscription : " + e.message); } finally { showLoading(false); }
+        }
+
+        async function login() {
+            const code = document.getElementById('input-code').value.trim().toUpperCase();
+            if(!code) return;
+            
+            showLoading(true, "Identification...");
+            try {
+                // Admin bypass
+                if(code === "DEME91") {
+                    isAdmin = true; 
+                    user = { prenom: 'M.', nom: 'DEME' };
+                    document.getElementById('admin-dot').classList.remove('hidden');
+                    document.getElementById('admin-btn-dash').classList.remove('hidden');
+                    switchView('view-admin');
+                    return;
+                }
+
+                const { data, error } = await sb.from('eleves').select('*, classes(*)').eq('code_acces', code).single();
+                if(error) throw new Error("Code d'accès non reconnu.");
+                
+                user = data;
+                isAdmin = false;
+                localStorage.setItem('maths_code', code);
+                
+                document.getElementById('student-name').innerText = `${user.prenom} ${user.nom}`;
+                document.getElementById('initial-letter').innerText = user.prenom.charAt(0);
+                document.getElementById('class-info').innerText = user.classes.nom_classe;
+                
+                document.getElementById('admin-dot').classList.add('hidden');
+                document.getElementById('admin-btn-dash').classList.add('hidden');
+                
+                switchView('view-dash');
+                loadDevoirs();
+            } catch(e) { alert(e.message); } finally { showLoading(false); }
+        }
+
+        // QUIZ LOGIC
+        async function loadDevoirs() {
+            const { data } = await sb.from('devoirs').select('*').eq('id_classe', user.id_classe);
+            const list = document.getElementById('list-devoirs');
+            
+            if(!data || data.length === 0) {
+                list.innerHTML = `<div class="p-12 text-center glass rounded-3xl"><p class="text-slate-400 font-bold">Aucune évaluation programmée pour le moment.</p></div>`;
+                return;
+            }
+
+            list.innerHTML = data.map(d => `
+                <div class="glass p-8 rounded-3xl border border-white shadow-lg flex flex-col md:flex-row items-center justify-between hover:shadow-2xl transition-all group">
+                    <div class="flex items-center gap-6 mb-4 md:mb-0">
+                        <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-extrabold text-slate-800">${d.titre}</h4>
+                            <div class="flex gap-4 mt-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    ${d.duree_minutes} MIN
+                                </span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    SUR ${d.note_sur} PTS
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="startExam(${d.id_devoir})" class="w-full md:w-auto px-10 py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-indigo-600 transition-colors">Ouvrir le sujet</button>
+                </div>
+            `).join('');
+        }
+
+        async function startExam(id) {
+            showLoading(true, "Sécurisation de la session...");
+            
+            // Verif tentative existante
+            const { data: exist } = await sb.from('tentatives').select('*').eq('id_eleve', user.id_eleve).eq('id_devoir', id).maybeSingle();
+            if(exist && exist.statut === 'termine') { 
+                alert("Vous avez déjà soumis votre copie pour cette évaluation."); 
+                showLoading(false); return; 
+            }
+
+            const { data: d } = await sb.from('devoirs').select('*').eq('id_devoir', id).single();
+            quiz = d;
+
+            let attempt = exist;
+            if(!attempt) {
+                const { data: n, error } = await sb.from('tentatives').insert([{ 
+                    id_eleve: user.id_eleve, 
+                    id_devoir: id, 
+                    statut: 'en_cours', 
+                    heure_debut: new Date().toISOString() 
+                }]).select().single();
+                if(error) throw error;
+                attempt = n;
+            }
+            currentAttemptId = attempt.id_tentative;
+
+            const { data: qs } = await sb.from('questions').select('*, choix(*)').eq('id_devoir', id);
+            
+            document.getElementById('exam-title').innerText = quiz.titre;
+            document.getElementById('questions-area').innerHTML = qs.map((q, i) => `
+                <div class="question-card glass rounded-[2.5rem] p-10 border-l-[12px] border-slate-200 hover:border-indigo-400" data-q="${q.id_question}">
+                    <div class="flex items-center gap-4 mb-8">
+                        <span class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black">${i+1}</span>
+                        <h3 class="text-2xl font-bold text-slate-800 tracking-tight">${q.enonce}</h3>
+                    </div>
+                    <div class="grid gap-4">
+                        ${q.choix.map(c => `
+                            <label class="option-label group relative flex items-center p-5 border-2 border-slate-100 rounded-3xl cursor-pointer">
+                                <input type="radio" name="q${q.id_question}" value="${c.id_choix}" class="option-input hidden" onchange="updateProgress()">
+                                <div class="option-content flex items-center gap-4 w-full">
+                                    <div class="radio-custom w-6 h-6 border-2 border-slate-200 rounded-full flex items-center justify-center group-hover:border-indigo-400">
+                                        <div class="dot w-3 h-3 bg-indigo-600 rounded-full opacity-0"></div>
+                                    </div>
+                                    <span class="font-bold text-slate-700">${c.texte_choix}</span>
+                                </div>
+                                <style>
+                                    input:checked + .option-content .radio-custom { border-color: #4f46e5; }
+                                    input:checked + .option-content .dot { opacity: 1; }
+                                    input:checked + .option-content span { color: #4f46e5; }
+                                </style>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            if (window.renderMath) window.renderMath(document.getElementById('questions-area'), { 
+                delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}],
+                throwOnError: false 
+            });
+
+            switchView('view-exam');
+            startTimer(quiz.duree_minutes, attempt.heure_debut);
+            updateProgress();
+            showLoading(false);
+        }
+
+        function updateProgress() {
+            const total = document.querySelectorAll('.question-card').length;
+            const checked = document.querySelectorAll('input:checked').length;
+            const pct = Math.round((checked / total) * 100) || 0;
+            document.getElementById('progress-percent').innerText = `${pct}%`;
+            document.getElementById('time-progress').style.width = `${pct}%`;
+        }
+
+        function startTimer(min, debut) {
+            const end = new Date(debut).getTime() + (min * 60000);
+            if(timerObj) clearInterval(timerObj);
+            timerObj = setInterval(() => {
+                const diff = Math.max(0, Math.floor((end - Date.now())/1000));
+                const m = Math.floor(diff/60).toString().padStart(2, '0');
+                const s = (diff%60).toString().padStart(2, '0');
+                document.getElementById('timer-val').innerText = `${m}:${s}`;
+                
+                if(diff <= 0) {
+                    clearInterval(timerObj);
+                    alert("TEMPS ÉCOULÉ. Votre copie va être soumise automatiquement.");
+                    finalizeExam();
+                }
+            }, 1000);
+        }
+
+        async function handleSubmission() {
+            const checked = document.querySelectorAll('input:checked').length;
+            const total = document.querySelectorAll('.question-card').length;
+            
+            if(checked < total) {
+                if(!confirm(`Vous n'avez répondu qu'à ${checked} questions sur ${total}. Voulez-vous vraiment soumettre ?`)) return;
+            } else {
+                if(!confirm("Êtes-vous sûr de vouloir rendre votre copie maintenant ?")) return;
+            }
+            
+            document.getElementById('btn-finish').disabled = true;
+            document.getElementById('btn-finish').innerText = "ENVOI DE LA COPIE...";
+            await finalizeExam();
+        }
+
+        async function finalizeExam() {
+            clearInterval(timerObj);
+            showLoading(true, "Analyse des réponses...");
+            
+            const cards = document.querySelectorAll('.question-card');
+            const reps = [];
+            cards.forEach(card => {
+                const sel = card.querySelector('input:checked');
+                if(sel) reps.push({ id_tentative: currentAttemptId, id_question: card.dataset.q, id_choix: sel.value });
+            });
+
+            try {
+                // Sauvegarde réponses
+                if(reps.length > 0) await sb.from('reponses_eleves').insert(reps);
+                
+                // Calcul score & Correction
+                const { data: questions } = await sb.from('questions').select('*, choix(*)').eq('id_devoir', quiz.id_devoir);
+                let correctCount = 0;
+                let feed = "";
+
+                questions.forEach(q => {
+                    const userRep = reps.find(r => r.id_question == q.id_question);
+                    const correctChoice = q.choix.find(c => c.est_correct);
+                    const isOk = userRep && userRep.id_choix == correctChoice.id_choix;
+                    if(isOk) correctCount++;
+                    
+                    feed += `
+                    <div class="glass p-8 rounded-3xl border-l-8 ${isOk?'border-emerald-500 bg-emerald-50/10':'border-red-500 bg-red-50/10'} shadow-lg">
+                        <div class="flex items-start justify-between mb-4">
+                            <p class="text-lg font-bold text-slate-800">${q.enonce}</p>
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${isOk?'bg-emerald-100 text-emerald-700':'bg-red-100 text-red-700'}">
+                                ${isOk ? 'Correct' : 'Erreur'}
+                            </span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="p-4 bg-white/50 border border-slate-100 rounded-2xl flex items-center gap-3">
+                                <span class="text-xs font-bold text-slate-400 uppercase">La réponse était :</span>
+                                <span class="font-bold text-indigo-600">${correctChoice.texte_choix}</span>
+                            </div>
+                            ${q.feedback ? `
+                                <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl">
+                                    <p class="text-xs text-indigo-800 italic leading-relaxed">
+                                        <span class="font-black not-italic block mb-1 uppercase tracking-widest text-[9px]">Note explicative :</span>
+                                        ${q.feedback}
+                                    </p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>`;
+                });
+
+                const finalNote = parseFloat(((correctCount / questions.length) * quiz.note_sur).toFixed(2));
+                await sb.from('tentatives').update({ 
+                    score: finalNote, 
+                    statut: 'termine', 
+                    heure_fin: new Date().toISOString() 
+                }).eq('id_tentative', currentAttemptId);
+                
+                document.getElementById('final-score').innerText = `${finalNote}/${quiz.note_sur}`;
+                document.getElementById('feedback-area').innerHTML = feed;
+                if (window.renderMath) window.renderMath(document.getElementById('feedback-area'), { 
+                    delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}] 
+                });
+                
+                switchView('view-result');
+            } catch(e) { alert("Erreur technique lors de la soumission : " + e.message); } finally { showLoading(false); }
+        }
+
+        // ADMIN LOGIC
+        async function loadAdminData() {
+            if(!isAdmin) return;
+            try {
+                const { data: t } = await sb.from('tentatives').select('*, eleves(prenom, nom), devoirs(titre, note_sur)').order('id_tentative', {ascending:false});
+                const { count: e } = await sb.from('eleves').select('*', { count: 'exact', head: true });
+                
+                document.getElementById('admin-stat-eleves').innerText = e;
+                document.getElementById('admin-stat-tentatives').innerText = t?.length || 0;
+                
+                // Moyenne
+                const scores = t?.filter(r => r.score !== null).map(r => (r.score / r.devoirs.note_sur) * 20) || [];
+                const avg = scores.length ? (scores.reduce((a,b)=>a+b,0) / scores.length).toFixed(1) : "--";
+                document.getElementById('admin-avg').innerText = avg + "/20";
+
+                document.getElementById('admin-table-results').innerHTML = t?.map(r => `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center font-bold text-xs">${r.eleves?.prenom.charAt(0)}</div>
+                                <div class="font-bold text-slate-800">${r.eleves?.prenom} ${r.eleves?.nom}</div>
+                            </div>
+                        </td>
+                        <td class="p-6 text-slate-500 font-medium">${r.devoirs?.titre}</td>
+                        <td class="p-6">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 rounded-lg">
+                                <span class="text-indigo-600 font-black">${r.score ?? '--'}</span>
+                                <span class="text-[10px] text-indigo-300 font-bold">/ ${r.devoirs?.note_sur}</span>
+                            </div>
+                        </td>
+                        <td class="p-6">
+                            <span class="text-[10px] font-black uppercase tracking-widest ${r.statut==='termine'?'text-emerald-500':'text-orange-500 animate-pulse'}">
+                                ${r.statut === 'termine' ? 'Déposé' : 'En cours'}
+                            </span>
+                        </td>
+                        <td class="p-6 text-right">
+                            <button class="text-slate-400 hover:text-indigo-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2"></path></svg></button>
+                        </td>
+                    </tr>
+                `).join('') || `<tr><td colspan="5" class="p-12 text-center text-slate-400 font-bold">Aucune donnée disponible.</td></tr>`;
+            } catch(e) { console.error(e); }
+        }
+
+        function logout() { 
+            localStorage.removeItem('maths_code'); 
+            location.reload(); 
+        }
+
+        // START
+        window.onload = () => {
+            loadClasses();
+            const saved = localStorage.getItem('maths_code');
+            if(saved) {
+                document.getElementById('input-code').value = saved;
+                login();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -22,6 +22,11 @@
         .loader-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .prof-container { width: 160px; height: 160px; border-radius: 2.5rem; overflow: hidden; border: 4px solid white; background: #f1f5f9; }
+        /* Cacher la scrollbar pour un look plus clean */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="min-h-screen pb-12">
@@ -58,6 +63,7 @@
         <div class="max-w-4xl mx-auto -mt-12 px-6 relative z-20">
             <div class="glass rounded-[3rem] p-10 shadow-2xl border border-white flex flex-col md:flex-row items-center gap-10">
                 <div class="prof-container transform -rotate-3 shadow-xl">
+                    <!-- iFrame de présentation -->
                     <iframe src="https://educationsntest-my.sharepoint.com/personal/sire_deme_education_sn/_layouts/15/embed.aspx?UniqueId=1266a1c9-6b29-48bb-bbe6-b5443d22859a" width="100%" height="100%" frameborder="0"></iframe>
                 </div>
                 <div class="text-center md:text-left">
@@ -73,9 +79,9 @@
     <div id="view-login" class="hidden max-w-lg mx-auto p-6 mt-20">
         <div class="glass rounded-[2.5rem] p-10 shadow-2xl border border-white text-center">
             <h1 class="text-4xl font-black text-slate-900 mb-8">Code d'accès</h1>
-            <input type="password" id="input-code" maxlength="4" class="w-full p-6 border-2 border-slate-100 bg-white/50 rounded-[2rem] text-center text-5xl font-black tracking-[0.5em] uppercase mb-6 outline-none focus:border-indigo-500">
+            <input type="password" id="input-code" maxlength="4" class="w-full p-6 border-2 border-slate-100 bg-white/50 rounded-[2rem] text-center text-5xl font-black tracking-[0.5em] uppercase mb-6 outline-none focus:border-indigo-500 transition-colors">
             <button onclick="login()" class="w-full btn-primary text-white font-bold py-5 rounded-2xl shadow-lg">Connexion</button>
-            <button onclick="switchView('view-home')" class="w-full mt-6 text-slate-400 font-bold text-xs uppercase tracking-widest">Retour</button>
+            <button onclick="switchView('view-home')" class="w-full mt-6 text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-slate-600 transition-colors">Retour</button>
         </div>
     </div>
 
@@ -85,13 +91,15 @@
             <h2 class="text-4xl font-black text-slate-900 mb-6">Inscription</h2>
             <form onsubmit="handleRegister(event)" class="space-y-5">
                 <div class="grid grid-cols-2 gap-5">
-                    <input type="text" id="reg-prenom" required class="w-full p-4 border rounded-2xl" placeholder="Prénom">
-                    <input type="text" id="reg-nom" required class="w-full p-4 border rounded-2xl" placeholder="Nom">
+                    <input type="text" id="reg-prenom" required class="w-full p-4 border rounded-2xl outline-none focus:border-indigo-500 transition-colors" placeholder="Prénom">
+                    <input type="text" id="reg-nom" required class="w-full p-4 border rounded-2xl outline-none focus:border-indigo-500 transition-colors" placeholder="Nom">
                 </div>
-                <select id="reg-classe" required class="w-full p-4 border rounded-2xl bg-white"></select>
+                <select id="reg-classe" required class="w-full p-4 border rounded-2xl bg-white outline-none focus:border-indigo-500 transition-colors">
+                    <option value="" disabled selected>Chargement des classes...</option>
+                </select>
                 <button type="submit" class="w-full btn-primary text-white font-bold py-5 rounded-2xl shadow-lg">Obtenir mon code (4 car.)</button>
             </form>
-            <button onclick="switchView('view-home')" class="w-full mt-6 text-slate-400 font-bold text-xs uppercase text-center">Déjà inscrit ? Retour</button>
+            <button onclick="switchView('view-home')" class="w-full mt-6 text-slate-400 font-bold text-xs uppercase text-center hover:text-slate-600 transition-colors">Déjà inscrit ? Retour</button>
         </div>
     </div>
 
@@ -105,9 +113,12 @@
                     <span id="class-info" class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded">...</span>
                 </div>
             </div>
-            <button onclick="logout()" class="px-6 py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-xs tracking-tighter">DÉCONNEXION</button>
+            <button onclick="logout()" class="px-6 py-3 bg-red-50 hover:bg-red-100 transition-colors text-red-500 rounded-2xl font-bold text-xs tracking-tighter">DÉCONNEXION</button>
         </div>
-        <div id="list-devoirs" class="grid gap-6"></div>
+        <div>
+            <h3 class="text-xl font-bold text-slate-800 mb-4 px-2">Évaluations disponibles</h3>
+            <div id="list-devoirs" class="grid gap-6"></div>
+        </div>
     </div>
 
     <!-- VUE EXAMEN -->
@@ -116,8 +127,8 @@
             <div class="flex items-center gap-4">
                 <div class="w-16 h-16 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl" id="timer-val">00:00</div>
                 <div>
-                    <h4 id="exam-title" class="font-extrabold text-slate-900">Examen</h4>
-                    <div class="w-32 bg-slate-200 h-1.5 rounded-full mt-2 overflow-hidden"><div id="exam-progress-bar" class="bg-indigo-600 h-full w-0 transition-all"></div></div>
+                    <h4 id="exam-title" class="font-extrabold text-slate-900 line-clamp-1">Examen</h4>
+                    <div class="w-32 bg-slate-200 h-1.5 rounded-full mt-2 overflow-hidden"><div id="exam-progress-bar" class="bg-indigo-600 h-full w-0 transition-all duration-300"></div></div>
                 </div>
             </div>
             <div class="text-right"><span id="q-counter" class="text-indigo-600 font-black">1/10</span></div>
@@ -132,39 +143,47 @@
             <div class="inline-flex items-center justify-center w-52 h-52 rounded-full bg-indigo-50 border-8 border-white shadow-xl text-5xl font-black text-indigo-600 mb-10" id="final-score">--/20</div>
             <button onclick="location.reload()" class="w-full btn-primary text-white py-5 rounded-2xl font-bold">Retour à l'accueil</button>
         </div>
-        <div id="feedback-area" class="mt-12 text-left space-y-4"></div>
+        <div class="mt-8 text-left px-2">
+            <h3 class="text-xl font-bold text-slate-800 mb-4">Détail des réponses</h3>
+            <div id="feedback-area" class="space-y-4"></div>
+        </div>
     </div>
 
     <!-- PANEL ADMIN -->
     <div id="view-admin" class="hidden max-w-6xl mx-auto p-6 mt-8 space-y-8">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h1 class="text-4xl font-black text-slate-900">Espace Professeur</h1>
-            <button onclick="logout()" class="px-6 py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-xs uppercase">Quitter</button>
+            <button onclick="logout()" class="px-6 py-3 bg-red-50 hover:bg-red-100 transition-colors text-red-500 rounded-2xl font-bold text-xs uppercase">Quitter</button>
         </div>
         
         <div class="flex gap-2 border-b overflow-x-auto">
-            <button onclick="setAdminTab('results')" class="admin-tab px-6 py-4 font-bold text-sm border-b-4 border-indigo-600 text-indigo-600" id="tab-results">Résultats</button>
-            <button onclick="setAdminTab('stats')" class="admin-tab px-6 py-4 font-bold text-sm text-slate-400 border-b-4 border-transparent" id="tab-stats">Analyses</button>
-            <button onclick="setAdminTab('content')" class="admin-tab px-6 py-4 font-bold text-sm text-slate-400 border-b-4 border-transparent" id="tab-content">Évaluations</button>
+            <button onclick="setAdminTab('results')" class="admin-tab px-6 py-4 font-bold text-sm border-b-4 border-indigo-600 text-indigo-600 transition-colors whitespace-nowrap" id="tab-results">Résultats</button>
+            <button onclick="setAdminTab('stats')" class="admin-tab px-6 py-4 font-bold text-sm text-slate-400 border-b-4 border-transparent hover:text-slate-600 transition-colors whitespace-nowrap" id="tab-stats">Analyses</button>
+            <button onclick="setAdminTab('content')" class="admin-tab px-6 py-4 font-bold text-sm text-slate-400 border-b-4 border-transparent hover:text-slate-600 transition-colors whitespace-nowrap" id="tab-content">Évaluations</button>
         </div>
         
-        <div id="admin-sec-results" class="glass rounded-[2rem] overflow-hidden shadow-xl">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 text-xs font-bold text-slate-400 uppercase"><tr><th class="p-4">Élève</th><th class="p-4">Devoir</th><th class="p-4">Score</th><th class="p-4">Date</th></tr></thead>
+        <!-- Sous-vue: Résultats -->
+        <div id="admin-sec-results" class="glass rounded-[2rem] overflow-hidden shadow-xl overflow-x-auto">
+            <table class="w-full text-left min-w-[600px]">
+                <thead class="bg-slate-50 text-xs font-bold text-slate-400 uppercase border-b">
+                    <tr><th class="p-4">Élève</th><th class="p-4">Devoir</th><th class="p-4">Score</th><th class="p-4">Date</th></tr>
+                </thead>
                 <tbody id="table-admin-results" class="text-sm"></tbody>
             </table>
         </div>
 
+        <!-- Sous-vue: Statistiques -->
         <div id="admin-sec-stats" class="hidden space-y-6">
-            <div class="flex gap-4 items-center">
-                <span class="font-bold text-slate-700">Devoir :</span>
-                <select id="stats-devoir-select" onchange="loadStatsRemediation()" class="p-3 border rounded-xl bg-white shadow-sm"></select>
+            <div class="flex flex-col sm:flex-row gap-4 sm:items-center bg-white p-4 rounded-2xl shadow-sm border">
+                <span class="font-bold text-slate-700 whitespace-nowrap">Sélectionner un devoir :</span>
+                <select id="stats-devoir-select" onchange="loadStatsRemediation()" class="flex-1 p-3 border rounded-xl bg-slate-50 outline-none focus:border-indigo-500"></select>
             </div>
             <div id="stats-container" class="grid gap-4"></div>
         </div>
         
+        <!-- Sous-vue: Gestion du Contenu -->
         <div id="admin-sec-content" class="hidden space-y-6">
-            <button onclick="openModal('modal-devoir')" class="btn-primary text-white px-8 py-4 rounded-2xl font-bold shadow-lg">Nouveau Devoir</button>
+            <button onclick="openModal('modal-devoir')" class="btn-primary text-white px-8 py-4 rounded-2xl font-bold shadow-lg">Créer un nouveau devoir</button>
             <div id="admin-list-devoirs" class="grid gap-4"></div>
         </div>
     </div>
@@ -172,24 +191,26 @@
     <!-- MODALE CRÉATION DEVOIR -->
     <div id="modal-devoir" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] w-full max-w-lg p-8 overflow-y-auto max-h-[90vh]">
-            <h3 class="text-2xl font-bold mb-6">Paramètres du Devoir</h3>
+            <h3 class="text-2xl font-bold mb-6 text-slate-900">Paramètres du Devoir</h3>
             <form onsubmit="saveDevoir(event)" class="space-y-4">
-                <input type="text" id="dev-titre" required class="w-full p-4 border rounded-xl" placeholder="Titre">
-                <select id="dev-classe-select" required class="w-full p-4 border rounded-xl bg-white"></select>
+                <input type="text" id="dev-titre" required class="w-full p-4 border rounded-xl outline-none focus:border-indigo-500" placeholder="Titre (ex: DS n°1 - Algèbre)">
+                <select id="dev-classe-select" required class="w-full p-4 border rounded-xl bg-white outline-none focus:border-indigo-500"></select>
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="number" id="dev-duree" required value="30" class="p-4 border rounded-xl" placeholder="Durée (min)">
-                    <input type="number" id="dev-note" required value="20" class="p-4 border rounded-xl" placeholder="Sur /20">
+                    <input type="number" id="dev-duree" required value="30" class="p-4 border rounded-xl outline-none focus:border-indigo-500" placeholder="Durée (min)">
+                    <input type="number" id="dev-note" required value="20" class="p-4 border rounded-xl outline-none focus:border-indigo-500" placeholder="Note maximale (ex: 20)">
                 </div>
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-400 uppercase">Date d'ouverture :</label>
-                    <input type="datetime-local" id="dev-debut" required class="w-full p-4 border rounded-xl">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Date et heure d'ouverture :</label>
+                    <input type="datetime-local" id="dev-ouverture" required class="w-full p-4 border rounded-xl outline-none focus:border-indigo-500">
                 </div>
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-400 uppercase">Date de fermeture :</label>
-                    <input type="datetime-local" id="dev-fin" required class="w-full p-4 border rounded-xl">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Date et heure de fermeture :</label>
+                    <input type="datetime-local" id="dev-fermeture" required class="w-full p-4 border rounded-xl outline-none focus:border-indigo-500">
                 </div>
-                <button type="submit" class="w-full btn-primary text-white font-bold py-4 rounded-xl">Enregistrer</button>
-                <button type="button" onclick="closeModal('modal-devoir')" class="w-full text-slate-400 py-2">Fermer</button>
+                <div class="pt-4 space-y-3">
+                    <button type="submit" class="w-full btn-primary text-white font-bold py-4 rounded-xl shadow-lg">Enregistrer le devoir</button>
+                    <button type="button" onclick="closeModal('modal-devoir')" class="w-full text-slate-500 font-bold py-3 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">Annuler</button>
+                </div>
             </form>
         </div>
     </div>
@@ -197,38 +218,46 @@
     <!-- MODALE GESTION QUESTIONS -->
     <div id="modal-questions" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] w-full max-w-3xl max-h-[90vh] flex flex-col p-8">
-            <h3 class="text-2xl font-bold mb-4" id="q-devoir-title">Questions</h3>
-            <div id="admin-list-questions" class="overflow-y-auto flex-1 space-y-4 mb-4 pr-2"></div>
-            <button onclick="openModal('modal-add-question')" class="btn-primary text-white font-bold py-4 rounded-xl mb-2">Ajouter Question</button>
-            <button onclick="closeModal('modal-questions')" class="text-slate-400 font-bold py-2">Fermer</button>
+            <h3 class="text-2xl font-bold mb-4 text-slate-900" id="q-devoir-title">Questions</h3>
+            <div id="admin-list-questions" class="overflow-y-auto flex-1 space-y-4 mb-6 pr-2"></div>
+            <div class="flex gap-4">
+                <button onclick="openModal('modal-add-question')" class="flex-1 btn-primary text-white font-bold py-4 rounded-xl shadow-lg">Ajouter une Question</button>
+                <button onclick="closeModal('modal-questions')" class="px-8 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Fermer</button>
+            </div>
         </div>
     </div>
 
     <!-- MODALE AJOUT QUESTION -->
     <div id="modal-add-question" class="hidden fixed inset-0 z-[210] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-        <div class="bg-white rounded-[2rem] w-full max-w-xl p-8 max-h-[90vh] overflow-y-auto">
-            <h3 class="text-xl font-bold mb-6">Énoncé Mathématique</h3>
-            <form onsubmit="saveQuestion(event)" class="space-y-6">
-                <textarea id="q-enonce" required rows="3" class="w-full p-4 border rounded-xl" placeholder="Énoncé (ex: $$f(x) = ax^2 + bx + c$$)"></textarea>
+        <div class="bg-white rounded-[2rem] w-full max-w-xl p-8 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 class="text-xl font-bold mb-6 text-slate-900">Énoncé de la question</h3>
+            <p class="text-xs text-slate-500 mb-4">Astuce : Utilisez <code>$$...$$</code> pour les formules mathématiques.</p>
+            <form id="form-add-question" onsubmit="saveQuestion(event)" class="space-y-6">
+                <textarea id="q-enonce" required rows="3" class="w-full p-4 border rounded-xl outline-none focus:border-indigo-500" placeholder="Énoncé (ex: Que vaut $$x$$si$$2x + 4 = 10$$ ?)"></textarea>
                 <div class="space-y-3">
-                    <div class="flex items-center gap-3"><input type="radio" name="q-correct" value="0" checked><input type="text" id="c-texte-0" required class="flex-1 p-3 border rounded-lg" placeholder="A"></div>
-                    <div class="flex items-center gap-3"><input type="radio" name="q-correct" value="1"><input type="text" id="c-texte-1" required class="flex-1 p-3 border rounded-lg" placeholder="B"></div>
-                    <div class="flex items-center gap-3"><input type="radio" name="q-correct" value="2"><input type="text" id="c-texte-2" required class="flex-1 p-3 border rounded-lg" placeholder="C"></div>
-                    <div class="flex items-center gap-3"><input type="radio" name="q-correct" value="3"><input type="text" id="c-texte-3" required class="flex-1 p-3 border rounded-lg" placeholder="D"></div>
+                    <p class="text-sm font-bold text-slate-700">Sélectionnez la bonne réponse :</p>
+                    <div class="flex items-center gap-3"><input type="radio" name="q-correct" value="0" checked class="w-5 h-5 accent-indigo-600"><input type="text" id="c-texte-0" required class="flex-1 p-3 border rounded-lg outline-none focus:border-indigo-500" placeholder="Option A"></div>
+                    <div class="flex items-center gap-3"><input type="radio" name="q-correct" value="1" class="w-5 h-5 accent-indigo-600"><input type="text" id="c-texte-1" required class="flex-1 p-3 border rounded-lg outline-none focus:border-indigo-500" placeholder="Option B"></div>
+                    <div class="flex items-center gap-3"><input type="radio" name="q-correct" value="2" class="w-5 h-5 accent-indigo-600"><input type="text" id="c-texte-2" required class="flex-1 p-3 border rounded-lg outline-none focus:border-indigo-500" placeholder="Option C"></div>
+                    <div class="flex items-center gap-3"><input type="radio" name="q-correct" value="3" class="w-5 h-5 accent-indigo-600"><input type="text" id="c-texte-3" required class="flex-1 p-3 border rounded-lg outline-none focus:border-indigo-500" placeholder="Option D"></div>
                 </div>
-                <button type="submit" class="w-full btn-primary text-white font-bold py-4 rounded-xl">Enregistrer</button>
-                <button type="button" onclick="closeModal('modal-add-question')" class="w-full text-slate-400 py-2">Annuler</button>
+                <div class="pt-2 flex gap-4">
+                    <button type="submit" class="flex-1 btn-primary text-white font-bold py-4 rounded-xl shadow-lg">Ajouter</button>
+                    <button type="button" onclick="closeModal('modal-add-question')" class="px-6 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Annuler</button>
+                </div>
             </form>
         </div>
     </div>
 
     <script>
+        // Configuration Supabase
         const SUPABASE_URL = "https://tetrjsqrraambnfessgo.supabase.co";
         const SUPABASE_KEY = "sb_publishable_cKb8bk48BWZhPkY4W4xpJA_2cdAohyv";
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null, isAdmin = false, currentQuiz = null, timerInt = null;
         let questionsData = [], currentQIdx = 0, answers = {}, attemptId = null;
+        let cheatWarnings = 0, examInProgress = false; // Anti-triche
 
         // --- GÉNÉRATION DEVICE ID UNIQUE ---
         function getDeviceId() {
@@ -259,26 +288,76 @@
             l.classList.toggle('hidden', !show);
         }
 
+        // Fonction sécurisée pour appeler KaTeX après modification du DOM
+        function renderMathsSafely(elementId) {
+            if(window.renderMath) {
+                setTimeout(() => {
+                    window.renderMath(document.getElementById(elementId), { 
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true}, 
+                            {left: '$', right: '$', display: false}
+                        ] 
+                    });
+                }, 50);
+            }
+        }
+
         async function loadClasses() {
-            const { data } = await sb.from('classes').select('*').order('nom_classe');
-            if(data) {
-                const html = '<option value="" disabled selected>Classe...</option>' + data.map(c => `<option value="${c.id_classe}">${c.nom_classe}</option>`).join('');
+            const { data, error } = await sb.from('classes').select('*').order('nom_classe');
+            if(data && data.length > 0) {
+                const html = '<option value="" disabled selected>Sélectionnez votre classe...</option>' + data.map(c => `<option value="${c.id_classe}">${c.nom_classe}</option>`).join('');
                 document.getElementById('reg-classe').innerHTML = html;
                 document.getElementById('dev-classe-select').innerHTML = html;
+            } else {
+                document.getElementById('reg-classe').innerHTML = '<option value="" disabled selected>Aucune classe disponible</option>';
             }
         }
 
         async function handleRegister(e) {
             e.preventDefault();
-            const prenom = document.getElementById('reg-prenom').value;
-            const nom = document.getElementById('reg-nom').value;
+            const prenom = document.getElementById('reg-prenom').value.trim();
+            const nom = document.getElementById('reg-nom').value.trim();
             const cid = document.getElementById('reg-classe').value;
-            const code = generateCode();
-            showLoading(true, "Génération...");
-            await sb.from('eleves').insert([{ prenom, nom, id_classe: cid, code_acces: code }]);
-            alert(`COMPTE CRÉÉ !\n\nIMPORTANT : Votre code d'accès est : ${code}\nNotez-le pour vous connecter.`);
-            switchView('view-login');
-            document.getElementById('input-code').value = code;
+            
+            if(!cid) {
+                alert("Veuillez sélectionner une classe.");
+                return;
+            }
+
+            showLoading(true, "Génération de l'accès...");
+            let code = generateCode();
+            
+            // Boucle pour éviter les conflits de codes uniques (très rare avec 4 carac, mais possible)
+            let success = false;
+            let attempts = 0;
+            
+            while(!success && attempts < 5) {
+                const { error } = await sb.from('eleves').insert([{ prenom, nom, id_classe: cid, code_acces: code }]);
+                if(error) {
+                    if(error.code === '23505') { // Code d'erreur PostgreSQL pour violation d'unicité
+                        code = generateCode();
+                        attempts++;
+                    } else {
+                        alert("Une erreur est survenue lors de l'inscription : " + error.message);
+                        showLoading(false);
+                        return;
+                    }
+                } else {
+                    success = true;
+                }
+            }
+
+            if(success) {
+                alert(`COMPTE CRÉÉ AVEC SUCCÈS !\n\nIMPORTANT : Votre code d'accès personnel est : ${code}\nPrenez une capture d'écran ou notez-le soigneusement.`);
+                switchView('view-login');
+                document.getElementById('input-code').value = code;
+                // Vider le formulaire
+                document.getElementById('reg-prenom').value = '';
+                document.getElementById('reg-nom').value = '';
+                document.getElementById('reg-classe').value = '';
+            } else {
+                alert("Impossible de générer un code unique. Veuillez réessayer.");
+            }
             showLoading(false);
         }
 
@@ -287,7 +366,8 @@
             if(!code) return;
             showLoading(true, "Vérification...");
 
-            // --- VÉRIFICATION ADMIN (ID 1) ---
+            // --- VÉRIFICATION ADMIN ---
+            // On conserve la logique ID=1 pour l'admin, mais vous devriez ajouter un code secret fixe ou une colonne 'is_admin'
             const { data: adminCheck } = await sb.from('eleves').select('code_acces').eq('id_eleve', 1).single();
             if(adminCheck && code === adminCheck.code_acces) {
                 isAdmin = true;
@@ -299,76 +379,130 @@
             }
 
             const { data: user, error } = await sb.from('eleves').select('*, classes(*)').eq('code_acces', code).single();
-            if(error || !user) { alert("Code invalide."); showLoading(false); return; }
+            if(error || !user) { 
+                alert("Code invalide ou introuvable."); 
+                showLoading(false); 
+                return; 
+            }
 
-            // --- VÉRIFICATION DEVICE_ID (UNICITÉ APPAREIL) ---
+            // --- VÉRIFICATION DEVICE_ID (ANTI-FRAUDE BASIQUE) ---
             const currentDevice = getDeviceId();
             if(!user.device_id) {
                 // Premier enregistrement de l'appareil
                 await sb.from('eleves').update({ device_id: currentDevice }).eq('id_eleve', user.id_eleve);
             } else if(user.device_id !== currentDevice) {
-                alert("ACCÈS REFUSÉ : Ce compte est déjà lié à un autre appareil.");
-                showLoading(false); return;
+                alert("ACCÈS REFUSÉ :\nCe code d'accès est déjà lié à un autre téléphone ou ordinateur. Vous ne pouvez pas changer d'appareil pour un même compte.");
+                showLoading(false); 
+                return;
             }
 
             currentUser = user;
             localStorage.setItem('maths_token', code);
             document.getElementById('student-name').innerText = `${user.prenom} ${user.nom}`;
-            document.getElementById('class-info').innerText = user.classes?.nom_classe;
+            document.getElementById('class-info').innerText = user.classes?.nom_classe || "Classe inconnue";
+            
             switchView('view-dash');
             loadDevoirs();
             showLoading(false);
         }
 
         async function loadDevoirs() {
-            const { data } = await sb.from('devoirs').select('*').eq('id_classe', currentUser.id_classe);
+            const { data, error } = await sb.from('devoirs').select('*').eq('id_classe', currentUser.id_classe).order('date_ouverture', { ascending: false });
+            
+            if(error) {
+                console.error("Erreur chargement devoirs:", error);
+                document.getElementById('list-devoirs').innerHTML = "<p class='text-red-500'>Erreur lors du chargement des évaluations.</p>";
+                return;
+            }
+
             document.getElementById('list-devoirs').innerHTML = data?.map(d => {
                 const now = new Date();
-                const start = new Date(d.date_debut);
-                const end = new Date(d.date_fin);
+                // CORRECTION: Utilisation de date_ouverture et date_fermeture (schema SQL)
+                const start = new Date(d.date_ouverture);
+                const end = new Date(d.date_fermeture);
                 const isLocked = now < start || now > end;
+                const isPast = now > end;
+
+                let statusBadge = '';
+                if(isPast) statusBadge = `<span class="bg-red-100 text-red-600 px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2">Terminé</span>`;
+                else if(!isLocked) statusBadge = `<span class="bg-emerald-100 text-emerald-600 px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2">En cours</span>`;
 
                 return `
-                    <div class="glass p-6 rounded-[2rem] flex justify-between items-center shadow-md border-l-8 ${isLocked ? 'border-slate-300 opacity-75' : 'border-indigo-500'}">
+                    <div class="glass p-6 rounded-[2rem] flex flex-col sm:flex-row justify-between sm:items-center shadow-md border-l-8 ${isLocked ? 'border-slate-300 opacity-80' : 'border-indigo-500'} gap-4">
                         <div>
-                            <h4 class="text-lg font-bold text-slate-800">${d.titre}</h4>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${d.duree_minutes} MIN | /${d.note_sur}</p>
-                            ${isLocked ? `<p class="text-[9px] font-black text-red-500 uppercase mt-1">Dispo le ${start.toLocaleString()}</p>` : ''}
+                            <div class="flex items-center mb-1">
+                                <h4 class="text-lg font-bold text-slate-800">${d.titre}</h4>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">${d.duree_minutes} MIN | Noté sur ${d.note_sur}</p>
+                            ${now < start ? `<p class="text-[11px] font-bold text-orange-500 uppercase mt-2">S'ouvre le ${start.toLocaleString('fr-FR')}</p>` : ''}
+                            ${isPast ? `<p class="text-[11px] font-bold text-slate-400 uppercase mt-2">Fermé depuis le ${end.toLocaleString('fr-FR')}</p>` : ''}
                         </div>
                         <button onclick="${isLocked ? `alert('Évaluation non accessible actuellement.')` : `startExam(${d.id_devoir})`}" 
-                                class="px-8 py-3 rounded-xl font-bold shadow-md transition-all ${isLocked ? 'bg-slate-200 text-slate-400' : 'btn-primary text-white'}">
-                            ${isLocked ? 'Fermé' : 'Démarrer'}
+                                class="px-8 py-3 rounded-xl font-bold shadow-md transition-all ${isLocked ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'btn-primary text-white'} w-full sm:w-auto">
+                            ${isLocked ? 'Indisponible' : 'Démarrer l\'examen'}
                         </button>
                     </div>
                 `;
-            }).join('') || "Aucun devoir pour le moment.";
+            }).join('') || "<p class='text-slate-500 italic p-4'>Aucune évaluation programmée pour votre classe.</p>";
         }
 
         async function startExam(id) {
-            showLoading(true);
-            const { data: dev } = await sb.from('devoirs').select('*').eq('id_devoir', id).single();
+            showLoading(true, "Préparation de l'examen...");
+            const { data: dev, error: devError } = await sb.from('devoirs').select('*').eq('id_devoir', id).single();
             
-            // --- VÉRIFICATION TEMPORELLE SÉCURISÉE ---
+            if(devError || !dev) {
+                alert("Erreur lors de la récupération du devoir.");
+                showLoading(false); return;
+            }
+
+            // --- VÉRIFICATION TEMPORELLE (Schema SQL) ---
             const now = new Date();
-            if(now < new Date(dev.date_debut) || now > new Date(dev.date_fin)) {
-                alert("Accès refusé : L'évaluation n'est pas ouverte à cette heure.");
+            const start = new Date(dev.date_ouverture);
+            const end = new Date(dev.date_fermeture);
+            
+            if(now < start || now > end) {
+                alert("Accès refusé : L'évaluation n'est pas ouverte actuellement.");
                 showLoading(false); return;
             }
 
             const { data: ex } = await sb.from('tentatives').select('*').eq('id_eleve', currentUser.id_eleve).eq('id_devoir', id).maybeSingle();
-            if(ex && ex.statut === 'termine') { alert("Devoir déjà rendu."); showLoading(false); return; }
+            if(ex && ex.statut === 'termine') { 
+                alert("Vous avez déjà rendu cette évaluation."); 
+                showLoading(false); return; 
+            }
 
             currentQuiz = dev;
             let attempt = ex;
             if(!attempt) {
-                const { data: n } = await sb.from('tentatives').insert([{ id_eleve: currentUser.id_eleve, id_devoir: id, statut: 'en_cours', heure_debut: new Date().toISOString() }]).select().single();
+                const { data: n, error: attError } = await sb.from('tentatives').insert([{ 
+                    id_eleve: currentUser.id_eleve, 
+                    id_devoir: id, 
+                    statut: 'en_cours', 
+                    heure_debut: new Date().toISOString() 
+                }]).select().single();
+                
+                if(attError) {
+                    alert("Erreur de lancement de la tentative.");
+                    showLoading(false); return;
+                }
                 attempt = n;
             }
             attemptId = attempt.id_tentative;
 
             const { data: qs } = await sb.from('questions').select('*, choix(*)').eq('id_devoir', id);
+            
+            if(!qs || qs.length === 0) {
+                alert("Ce devoir ne contient aucune question pour le moment.");
+                showLoading(false); return;
+            }
+            
+            // Mélanger les questions optionnellement ici (shuffle)
             questionsData = qs;
-            currentQIdx = 0; answers = {};
+            currentQIdx = 0; 
+            answers = {};
+            cheatWarnings = 0;
+            examInProgress = true;
             
             document.getElementById('exam-title').innerText = dev.titre;
             switchView('view-exam');
@@ -380,73 +514,161 @@
         function renderQuestion() {
             const q = questionsData[currentQIdx];
             const sel = answers[q.id_question];
-            document.getElementById('q-counter').innerText = `${currentQIdx + 1}/${questionsData.length}`;
+            const hasAnswered = sel !== undefined;
+            document.getElementById('q-counter').innerText = `Question ${currentQIdx + 1} / ${questionsData.length}`;
             document.getElementById('exam-progress-bar').style.width = `${((currentQIdx+1)/questionsData.length)*100}%`;
 
             document.getElementById('questions-area').innerHTML = `
-                <div class="glass p-8 rounded-[2.5rem] shadow-xl space-y-8">
-                    <div class="text-xl font-bold text-slate-800 leading-relaxed">${q.enonce}</div>
-                    <div class="grid gap-4">
-                        ${q.choix.map(c => `
-                            <label class="flex items-center p-5 border-2 rounded-2xl cursor-pointer transition-all ${sel == c.id_choix ? 'border-indigo-600 bg-indigo-50' : 'border-slate-100 hover:border-indigo-200'}">
-                                <input type="radio" name="q" value="${c.id_choix}" class="hidden" onchange="answers[${q.id_question}]=this.value; renderQuestion()" ${sel == c.id_choix ? 'checked' : ''}>
-                                <span class="font-bold text-slate-700">${c.texte_choix}</span>
+                <div class="glass p-6 sm:p-8 rounded-[2.5rem] shadow-xl space-y-8">
+                    <div class="text-lg sm:text-xl font-bold text-slate-800 leading-relaxed">${q.enonce}</div>
+                    <div class="grid gap-3 sm:gap-4">
+                        ${q.choix.map((c, i) => `
+                            <label class="flex items-center p-4 sm:p-5 border-2 rounded-2xl cursor-pointer transition-all ${sel == c.id_choix ? 'border-indigo-600 bg-indigo-50 shadow-sm' : 'border-slate-200 bg-white hover:border-indigo-300'}">
+                                <input type="radio" name="q_exam" value="${c.id_choix}" class="hidden" onchange="answers[${q.id_question}]=this.value; renderQuestion()" ${sel == c.id_choix ? 'checked' : ''}>
+                                <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center mr-4 ${sel == c.id_choix ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 text-slate-500 font-bold'}">
+                                    ${String.fromCharCode(65 + i)}
+                                </div>
+                                <span class="font-bold text-slate-700 flex-1">${c.texte_choix}</span>
                             </label>
                         `).join('')}
                     </div>
-                    <div class="flex justify-between pt-4">
-                        <button onclick="if(currentQIdx>0) {currentQIdx--; renderQuestion()}" class="px-6 py-3 font-bold text-slate-400">Précédent</button>
+                    <div class="flex justify-end pt-6 border-t border-slate-100">
                         ${currentQIdx < questionsData.length - 1 
-                            ? `<button onclick="currentQIdx++; renderQuestion()" class="btn-primary text-white px-10 py-4 rounded-2xl font-bold shadow-lg">Suivant</button>`
-                            : `<button onclick="submitExam()" class="bg-emerald-600 text-white px-10 py-4 rounded-2xl font-bold shadow-lg">Soumettre</button>`}
+                            ? `<button onclick="nextQuestion()" class="btn-primary text-white px-8 sm:px-10 py-3 rounded-2xl font-bold shadow-lg transition-all ${!hasAnswered ? 'opacity-50 cursor-not-allowed' : ''}" ${!hasAnswered ? 'disabled' : ''}>Valider et continuer →</button>`
+                            : `<button onclick="confirmSubmit()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 sm:px-10 py-3 rounded-2xl font-bold shadow-lg transition-colors ${!hasAnswered ? 'opacity-50 cursor-not-allowed' : ''}" ${!hasAnswered ? 'disabled' : ''}>Valider et Terminer</button>`}
                     </div>
                 </div>
             `;
-            if(window.renderMath) window.renderMath(document.getElementById('questions-area'), { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}] });
+            renderMathsSafely('questions-area');
+        }
+
+        function nextQuestion() {
+            if(answers[questionsData[currentQIdx].id_question] === undefined) return;
+            currentQIdx++;
+            renderQuestion();
+        }
+
+        function confirmSubmit() {
+            if(!confirm("Soumettre définitivement vos réponses ?")) return;
+            submitExam();
         }
 
         function startTimer(min, debut) {
+            // Nettoyage au cas où un timer tourne déjà
+            if(timerInt) clearInterval(timerInt);
+            
             const end = new Date(debut).getTime() + (min * 60000);
             timerInt = setInterval(() => {
                 const diff = Math.max(0, Math.floor((end - Date.now())/1000));
-                document.getElementById('timer-val').innerText = `${Math.floor(diff/60).toString().padStart(2,'0')}:${(diff%60).toString().padStart(2,'0')}`;
-                if(diff <= 0) { clearInterval(timerInt); submitExam(); }
+                const m = Math.floor(diff/60).toString().padStart(2,'0');
+                const s = (diff%60).toString().padStart(2,'0');
+                const timerEl = document.getElementById('timer-val');
+                timerEl.innerText = `${m}:${s}`;
+                
+                if(diff <= 60) {
+                    timerEl.classList.remove('bg-slate-900');
+                    timerEl.classList.add('bg-red-600', 'animate-pulse');
+                }
+
+                if(diff <= 0) { 
+                    clearInterval(timerInt); 
+                    alert("Temps écoulé ! Vos réponses vont être soumises automatiquement.");
+                    submitExam(); 
+                }
             }, 1000);
         }
 
         async function submitExam() {
-            clearInterval(timerInt);
-            showLoading(true, "Analyse...");
-            const reps = Object.keys(answers).map(qid => ({ id_tentative: attemptId, id_question: qid, id_choix: answers[qid] }));
-            if(reps.length) await sb.from('reponses_eleves').insert(reps);
+            if(timerInt) clearInterval(timerInt);
+            examInProgress = false; // Fin du contrôle anti-triche
+            showLoading(true, "Correction automatique...");
+            
+            const reps = Object.keys(answers).map(qid => ({ 
+                id_tentative: attemptId, 
+                id_question: parseInt(qid), 
+                id_choix: parseInt(answers[qid]) 
+            }));
+            
+            if(reps.length > 0) {
+                await sb.from('reponses_eleves').insert(reps);
+            }
 
             const { data: fullQs } = await sb.from('questions').select('*, choix(*)').eq('id_devoir', currentQuiz.id_devoir);
             let rawScore = 0;
             let feedback = "";
+            
             fullQs.forEach(q => {
                 const correct = q.choix.find(c => c.est_correct);
-                const isOk = answers[q.id_question] == correct.id_choix;
+                const studentAnswerId = answers[q.id_question];
+                const isOk = studentAnswerId == correct.id_choix;
+                
                 if(isOk) rawScore++;
-                feedback += `<div class="p-4 rounded-xl border-l-4 ${isOk?'border-emerald-500 bg-emerald-50':'border-red-500 bg-red-50'}"><b>${q.enonce}</b><br><small>Réponse correcte : ${correct.texte_choix}</small></div>`;
+                
+                // Construction du feedback visuel
+                let studentAnswerText = "Aucune réponse";
+                if(studentAnswerId) {
+                    const studentChoice = q.choix.find(c => c.id_choix == studentAnswerId);
+                    studentAnswerText = studentChoice ? studentChoice.texte_choix : "Erreur";
+                }
+
+                feedback += `
+                    <div class="p-5 rounded-2xl border-l-8 shadow-sm bg-white ${isOk?'border-emerald-500':'border-red-500'}">
+                        <b class="text-slate-800 block mb-3">${q.enonce}</b>
+                        <div class="text-sm grid gap-2">
+                            <div class="flex items-start">
+                                <span class="font-bold w-32 text-slate-500">Votre réponse :</span>
+                                <span class="${isOk?'text-emerald-700 font-bold':'text-red-600 line-through'}">${studentAnswerText}</span>
+                            </div>
+                            ${!isOk ? `
+                            <div class="flex items-start">
+                                <span class="font-bold w-32 text-emerald-600">Bonne réponse :</span>
+                                <span class="text-emerald-700 font-bold bg-emerald-50 px-2 rounded">${correct.texte_choix}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>`;
             });
 
-            const final = parseFloat(((rawScore / fullQs.length) * currentQuiz.note_sur).toFixed(2));
-            await sb.from('tentatives').update({ statut: 'termine', score: final, heure_fin: new Date().toISOString() }).eq('id_tentative', attemptId);
+            // Calcul du score final proportionnel
+            const final = parseFloat(((rawScore / fullQs.length) * currentQuiz.note_sur).toFixed(2)) || 0;
+            await sb.from('tentatives').update({ 
+                statut: 'termine', 
+                score: final, 
+                heure_fin: new Date().toISOString() 
+            }).eq('id_tentative', attemptId);
             
             document.getElementById('final-score').innerText = `${final}/${currentQuiz.note_sur}`;
+            
+            // Animation couleur du score
+            const scoreCircle = document.getElementById('final-score');
+            if(final >= (currentQuiz.note_sur / 2)) {
+                scoreCircle.classList.replace('text-indigo-600', 'text-emerald-500');
+                scoreCircle.classList.replace('bg-indigo-50', 'bg-emerald-50');
+            } else {
+                scoreCircle.classList.replace('text-indigo-600', 'text-red-500');
+                scoreCircle.classList.replace('bg-indigo-50', 'bg-red-50');
+            }
+
             document.getElementById('feedback-area').innerHTML = feedback;
-            if(window.renderMath) window.renderMath(document.getElementById('feedback-area'), { delimiters: [{left: '$$', right: '$$', display: true}] });
+            renderMathsSafely('feedback-area');
+            
             switchView('view-result');
             showLoading(false);
         }
 
         // --- ADMIN HELPERS ---
         function setAdminTab(t) {
-            document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('border-indigo-600', 'text-indigo-600'));
-            document.getElementById(`tab-${t}`).classList.add('border-indigo-600', 'text-indigo-600');
+            document.querySelectorAll('.admin-tab').forEach(b => {
+                b.classList.remove('border-indigo-600', 'text-indigo-600');
+                b.classList.add('border-transparent', 'text-slate-400');
+            });
+            const activeTab = document.getElementById(`tab-${t}`);
+            activeTab.classList.remove('border-transparent', 'text-slate-400');
+            activeTab.classList.add('border-indigo-600', 'text-indigo-600');
+            
             document.getElementById('admin-sec-results').classList.toggle('hidden', t !== 'results');
             document.getElementById('admin-sec-stats').classList.toggle('hidden', t !== 'stats');
             document.getElementById('admin-sec-content').classList.toggle('hidden', t !== 'content');
+            
             if(t==='results') loadAdminResults();
             if(t==='content') loadAdminDevoirs();
             if(t==='stats') loadStatsDevoirs();
@@ -454,47 +676,125 @@
 
         async function loadAdminResults() {
             const { data } = await sb.from('tentatives').select('*, eleves(prenom, nom, classes(nom_classe)), devoirs(titre, note_sur)').order('heure_fin', { ascending: false });
+            
+            if(!data || data.length === 0) {
+                document.getElementById('table-admin-results').innerHTML = "<tr><td colspan='4' class='p-6 text-center text-slate-500'>Aucun résultat pour le moment.</td></tr>";
+                return;
+            }
+
             document.getElementById('table-admin-results').innerHTML = data.map(t => `
-                <tr class="border-b hover:bg-slate-50"><td class="p-4"><b>${t.eleves?.prenom} ${t.eleves?.nom}</b><br><span class="text-[9px] uppercase">${t.eleves?.classes?.nom_classe}</span></td><td class="p-4">${t.devoirs?.titre}</td><td class="p-4 font-black">${t.score||'--'}/${t.devoirs?.note_sur}</td><td class="p-4 text-xs text-slate-400">${t.heure_fin ? new Date(t.heure_fin).toLocaleDateString() : '---'}</td></tr>
+                <tr class="border-b hover:bg-slate-50 transition-colors">
+                    <td class="p-4">
+                        <b class="text-slate-800">${t.eleves?.prenom} ${t.eleves?.nom}</b><br>
+                        <span class="text-[10px] font-bold text-indigo-500 uppercase bg-indigo-50 px-2 py-0.5 rounded">${t.eleves?.classes?.nom_classe}</span>
+                    </td>
+                    <td class="p-4 text-slate-700 font-medium">${t.devoirs?.titre}</td>
+                    <td class="p-4">
+                        <span class="font-black ${t.score >= (t.devoirs?.note_sur/2) ? 'text-emerald-600' : 'text-red-500'}">
+                            ${t.score !== null ? t.score : '--'}/${t.devoirs?.note_sur}
+                        </span>
+                    </td>
+                    <td class="p-4 text-xs text-slate-500">${t.heure_fin ? new Date(t.heure_fin).toLocaleString('fr-FR') : '<span class="text-orange-500 font-bold">En cours</span>'}</td>
+                </tr>
             `).join('');
         }
 
         async function loadAdminDevoirs() {
-            const { data } = await sb.from('devoirs').select('*, classes(*)');
-            document.getElementById('admin-list-devoirs').innerHTML = data.map(d => `
-                <div class="glass p-5 rounded-2xl flex justify-between items-center shadow-sm">
-                    <div><b class="text-slate-800">${d.titre}</b><br><small class="text-indigo-500 font-bold uppercase text-[9px]">${d.classes?.nom_classe}</small></div>
-                    <button onclick="gererQuestions(${d.id_devoir}, '${d.titre}')" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg font-bold text-xs uppercase">Gérer</button>
+            const { data } = await sb.from('devoirs').select('*, classes(*)').order('id_devoir', { ascending: false });
+            
+            if(!data || data.length === 0) {
+                document.getElementById('admin-list-devoirs').innerHTML = "<p class='text-slate-500'>Aucun devoir créé.</p>";
+                return;
+            }
+
+            document.getElementById('admin-list-devoirs').innerHTML = data.map(d => {
+                const now = new Date();
+                const start = new Date(d.date_ouverture);
+                const end = new Date(d.date_fermeture);
+                let badge = "";
+                if(now < start) badge = "<span class='text-orange-500 text-[10px] font-bold uppercase'>À venir</span>";
+                else if(now > end) badge = "<span class='text-red-500 text-[10px] font-bold uppercase'>Fermé</span>";
+                else badge = "<span class='text-emerald-500 text-[10px] font-bold uppercase'>Ouvert</span>";
+
+                return `
+                <div class="bg-white p-5 rounded-2xl flex flex-col sm:flex-row justify-between sm:items-center shadow-sm border border-slate-100 gap-4">
+                    <div>
+                        <div class="flex items-center gap-3 mb-1">
+                            <b class="text-slate-800 text-lg">${d.titre}</b>
+                            ${badge}
+                        </div>
+                        <div class="text-xs text-slate-500 space-y-1">
+                            <p>Classe : <b class="text-indigo-600">${d.classes?.nom_classe}</b> | Durée : ${d.duree_minutes} min</p>
+                            <p>Ouverture : ${start.toLocaleString('fr-FR')}</p>
+                            <p>Fermeture : ${end.toLocaleString('fr-FR')}</p>
+                        </div>
+                    </div>
+                    <button onclick="gererQuestions(${d.id_devoir}, '${d.titre.replace(/'/g, "\\'")}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-6 py-3 rounded-xl font-bold text-xs uppercase transition-colors">Gérer les Questions</button>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         async function saveDevoir(e) {
             e.preventDefault();
-            await sb.from('devoirs').insert([{
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerText = "Enregistrement...";
+            btn.disabled = true;
+
+            // CORRECTION: Utilisation de date_ouverture et date_fermeture au lieu de date_debut/fin
+            const { error } = await sb.from('devoirs').insert([{
                 titre: document.getElementById('dev-titre').value,
                 id_classe: document.getElementById('dev-classe-select').value,
                 duree_minutes: parseInt(document.getElementById('dev-duree').value),
                 note_sur: parseInt(document.getElementById('dev-note').value),
-                date_debut: document.getElementById('dev-debut').value,
-                date_fin: document.getElementById('dev-fin').value
+                date_ouverture: document.getElementById('dev-ouverture').value,
+                date_fermeture: document.getElementById('dev-fermeture').value
             }]);
-            closeModal('modal-devoir'); loadAdminDevoirs();
+
+            btn.innerText = "Enregistrer le devoir";
+            btn.disabled = false;
+
+            if(error) {
+                alert("Erreur lors de la création : " + error.message);
+                return;
+            }
+
+            alert("Devoir créé avec succès !");
+            closeModal('modal-devoir'); 
+            // Vider le formulaire
+            e.target.reset();
+            loadAdminDevoirs();
         }
 
         async function loadStatsDevoirs() {
-            const { data } = await sb.from('devoirs').select('*');
-            document.getElementById('stats-devoir-select').innerHTML = data.map(d => `<option value="${d.id_devoir}">${d.titre}</option>`).join('');
-            loadStatsRemediation();
+            const { data } = await sb.from('devoirs').select('*').order('date_ouverture', {ascending: false});
+            if(data && data.length > 0) {
+                document.getElementById('stats-devoir-select').innerHTML = data.map(d => `<option value="${d.id_devoir}">${d.titre}</option>`).join('');
+                loadStatsRemediation();
+            } else {
+                document.getElementById('stats-devoir-select').innerHTML = "<option>Aucun devoir disponible</option>";
+                document.getElementById('stats-container').innerHTML = "";
+            }
         }
 
         async function loadStatsRemediation() {
             const did = document.getElementById('stats-devoir-select').value;
-            if(!did) return;
+            if(!did || did === "Aucun devoir disponible") return;
+            
+            showLoading(true, "Analyse des données...");
             const { data: questions } = await sb.from('questions').select('*, choix(*)').eq('id_devoir', did);
             const { data: attempts } = await sb.from('tentatives').select('id_tentative').eq('id_devoir', did).eq('statut', 'termine');
-            const { data: reponses } = await sb.from('reponses_eleves').select('*').in('id_tentative', attempts.map(a => a.id_tentative));
-            let html = "";
+            
+            if(!attempts || attempts.length === 0) {
+                document.getElementById('stats-container').innerHTML = "<div class='p-6 bg-white rounded-2xl text-center text-slate-500 border border-slate-100'>Aucune copie n'a encore été rendue pour ce devoir.</div>";
+                showLoading(false);
+                return;
+            }
+
+            const attemptIds = attempts.map(a => a.id_tentative);
+            const { data: reponses } = await sb.from('reponses_eleves').select('*').in('id_tentative', attemptIds);
+            
+            let html = `<div class="mb-4 text-sm font-bold text-slate-500 uppercase tracking-widest">Basé sur ${attempts.length} copie(s) rendue(s)</div>`;
+            
             questions.forEach(q => {
                 const correct = q.choix.find(c => c.est_correct);
                 const total = reponses.filter(r => r.id_question == q.id_question);
@@ -502,52 +802,148 @@
                 const rate = total.length ? Math.round((ok.length / total.length) * 100) : 0;
                 const color = rate < 50 ? 'red' : (rate < 80 ? 'orange' : 'emerald');
                 html += `
-                    <div class="glass p-5 rounded-3xl border-l-8 border-${color}-500">
-                        <div class="flex justify-between mb-2"><h4 class="font-bold text-slate-800 text-sm">${q.enonce}</h4><span class="font-black text-${color}-600">${rate}%</span></div>
-                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-${color}-500 h-full" style="width: ${rate}%"></div></div>
+                    <div class="bg-white p-6 rounded-3xl border-l-8 border-${color}-500 shadow-sm">
+                        <div class="flex justify-between items-start mb-4 gap-4">
+                            <h4 class="font-bold text-slate-800 text-sm md:text-base leading-relaxed">${q.enonce}</h4>
+                            <span class="font-black text-2xl text-${color}-500 bg-${color}-50 px-3 py-1 rounded-xl">${rate}%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden shadow-inner">
+                            <div class="bg-${color}-500 h-full transition-all duration-1000" style="width: 0%" data-width="${rate}%"></div>
+                        </div>
+                        <div class="mt-3 text-xs text-slate-500 font-medium">Réussite : ${ok.length} élève(s) sur ${total.length} ayant répondu.</div>
                     </div>`;
             });
             document.getElementById('stats-container').innerHTML = html;
-            if(window.renderMath) window.renderMath(document.getElementById('stats-container'), { delimiters: [{left: '$$', right: '$$', display: true}] });
+            
+            // Animation des barres de progression
+            setTimeout(() => {
+                document.querySelectorAll('#stats-container [data-width]').forEach(el => {
+                    el.style.width = el.getAttribute('data-width');
+                });
+            }, 100);
+
+            renderMathsSafely('stats-container');
+            showLoading(false);
         }
 
         let adminDevId = null;
         async function gererQuestions(id, t) {
             adminDevId = id;
-            document.getElementById('q-devoir-title').innerText = t;
+            document.getElementById('q-devoir-title').innerText = "Questions : " + t;
             renderAdminQs();
             openModal('modal-questions');
         }
 
         async function renderAdminQs() {
-            const { data } = await sb.from('questions').select('*, choix(*)').eq('id_devoir', adminDevId);
-            document.getElementById('admin-list-questions').innerHTML = data.map(q => `
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <p class="font-bold text-slate-700 mb-2">${q.enonce}</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        ${q.choix.map(c => `<div class="text-[10px] ${c.est_correct?'text-emerald-600 font-bold':'text-slate-400'}">${c.texte_choix}</div>`).join('')}
+            document.getElementById('admin-list-questions').innerHTML = '<p class="text-center text-slate-400 py-4">Chargement des questions...</p>';
+            const { data, error } = await sb.from('questions').select('*, choix(*)').eq('id_devoir', adminDevId).order('id_question', { ascending: true });
+            
+            if(error) {
+                document.getElementById('admin-list-questions').innerHTML = '<p class="text-red-500">Erreur de chargement.</p>';
+                return;
+            }
+
+            if(!data || data.length === 0) {
+                document.getElementById('admin-list-questions').innerHTML = '<div class="text-center p-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200"><p class="text-slate-500 font-medium">Aucune question dans ce devoir.</p></div>';
+                return;
+            }
+
+            document.getElementById('admin-list-questions').innerHTML = data.map((q, idx) => `
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm relative">
+                    <div class="absolute top-4 right-4 text-xs font-bold text-slate-300">Q${idx+1}</div>
+                    <p class="font-bold text-slate-800 mb-4 pr-6">${q.enonce}</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        ${q.choix.map(c => `
+                            <div class="p-3 rounded-xl text-sm border ${c.est_correct ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-bold' : 'bg-white border-slate-200 text-slate-600'}">
+                                ${c.est_correct ? '✓ ' : ''}${c.texte_choix}
+                            </div>
+                        `).join('')}
                     </div>
                 </div>`).join('');
-            if(window.renderMath) window.renderMath(document.getElementById('admin-list-questions'), { delimiters: [{left: '$$', right: '$$', display: true}] });
+            
+            renderMathsSafely('admin-list-questions');
         }
 
         async function saveQuestion(e) {
             e.preventDefault();
-            const { data: qData } = await sb.from('questions').insert([{ id_devoir: adminDevId, enonce: document.getElementById('q-enonce').value }]).select().single();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerText = "Ajout...";
+            btn.disabled = true;
+
+            const { data: qData, error: qError } = await sb.from('questions')
+                .insert([{ id_devoir: adminDevId, enonce: document.getElementById('q-enonce').value }])
+                .select().single();
+            
+            if(qError) {
+                alert("Erreur lors de l'ajout de la question.");
+                btn.innerText = "Ajouter"; btn.disabled = false; return;
+            }
+
             const chs = [];
-            for(let i=0; i<4; i++) chs.push({ id_question: qData.id_question, texte_choix: document.getElementById(`c-texte-${i}`).value, est_correct: document.querySelector('input[name="q-correct"]:checked').value == i });
+            const correctIdx = document.querySelector('input[name="q-correct"]:checked').value;
+            
+            for(let i=0; i<4; i++) {
+                chs.push({ 
+                    id_question: qData.id_question, 
+                    texte_choix: document.getElementById(`c-texte-${i}`).value, 
+                    est_correct: (i == correctIdx) 
+                });
+            }
+            
             await sb.from('choix').insert(chs);
-            closeModal('modal-add-question'); renderAdminQs();
+            
+            // UX: Au lieu de fermer la modale, on vide le formulaire pour enchainer
+            document.getElementById('form-add-question').reset();
+            document.querySelector('input[name="q-correct"][value="0"]').checked = true; // reset radio
+            
+            btn.innerText = "Ajouter";
+            btn.disabled = false;
+            
+            // Retourner à la liste des questions
+            closeModal('modal-add-question');
+            renderAdminQs();
         }
 
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function logout() { localStorage.removeItem('maths_token'); location.reload(); }
+        function openModal(id) { 
+            document.getElementById(id).classList.remove('hidden'); 
+            document.body.style.overflow = 'hidden'; // Empêche le scroll du fond
+        }
+        function closeModal(id) { 
+            document.getElementById(id).classList.add('hidden'); 
+            document.body.style.overflow = 'auto';
+        }
+        function logout() { 
+            if(confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
+                localStorage.removeItem('maths_token'); 
+                location.reload(); 
+            }
+        }
+
+        // --- SYSTÈME ANTI-TRICHE (Contrôle d'assiduité) ---
+        document.addEventListener("visibilitychange", () => {
+            if (examInProgress && document.visibilityState === 'hidden') {
+                cheatWarnings++;
+                if (cheatWarnings === 1) {
+                    // Délai pour s'assurer que l'alerte s'affiche quand l'élève revient sur l'onglet
+                    setTimeout(() => {
+                        alert("⚠️ AVERTISSEMENT ANTI-TRICHE : Vous avez quitté la page de l'examen ou changé d'onglet. Ceci est strictement interdit.\n\nÀ la prochaine tentative, votre examen sera définitivement clôturé et soumis en l'état.");
+                    }, 500);
+                } else if (cheatWarnings >= 2) {
+                    setTimeout(() => {
+                        alert("🚨 INFRACTION DÉTECTÉE : Vous avez quitté la page à nouveau.\n\nL'examen est maintenant terminé. Vos réponses actuelles vont être soumises automatiquement.");
+                        submitExam();
+                    }, 500);
+                }
+            }
+        });
 
         window.onload = () => {
             loadClasses();
             const saved = localStorage.getItem('maths_token');
-            if(saved) { document.getElementById('input-code').value = saved; login(); }
+            if(saved) { 
+                document.getElementById('input-code').value = saved; 
+                login(); 
+            }
         }
     </script>
 </body>
